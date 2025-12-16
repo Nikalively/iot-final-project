@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+
 	"github.com/Nikalively/iot-final-project/internal/config"
 	"github.com/Nikalively/iot-final-project/internal/handlers"
 )
