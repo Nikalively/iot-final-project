@@ -1,0 +1,22 @@
+{
+  "dashboard": {
+    "title": "IoT Final Project Dashboard",
+    "panels": [
+      {
+        "title": "RPS",
+        "type": "graph",
+        "targets": [{"expr": "rate(iot_rps_total[5m])"}]
+      },
+      {
+        "title": "Anomalies",
+        "type": "graph",
+        "targets": [{"expr": "rate(iot_anomalies_total[5m])"}]
+      },
+      {
+        "title": "Latency",
+        "type": "graph",
+        "targets": [{"expr": "histogram_quantile(0.95, rate(iot_request_duration_seconds_bucket[5m]))"}]
+      }
+    ]
+  }
+}
