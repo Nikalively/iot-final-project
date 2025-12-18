@@ -3,6 +3,7 @@ package analytics
 import (
 	"math"
 	"sync"
+
 	"github.com/Nikalively/iot-final-project/internal/models"
 )
 
@@ -53,6 +54,9 @@ func (a *Analyzer) detectAnomalies() int {
 		return 0
 	}
 	mean, std := a.calculateMeanStd()
+	if std <= 0 {
+		return 0
+	}
 	count := 0
 	for _, v := range a.window {
 		z := math.Abs((v - mean) / std)
@@ -64,6 +68,9 @@ func (a *Analyzer) detectAnomalies() int {
 }
 
 func (a *Analyzer) calculateMeanStd() (float64, float64) {
+	if len(a.window) == 0 {
+		return 0, 0
+	}
 	sum := 0.0
 	for _, v := range a.window {
 		sum += v
@@ -72,6 +79,9 @@ func (a *Analyzer) calculateMeanStd() (float64, float64) {
 	variance := 0.0
 	for _, v := range a.window {
 		variance += math.Pow(v-mean, 2)
+	}
+	if len(a.window) == 1 {
+		return mean, 0
 	}
 	std := math.Sqrt(variance / float64(len(a.window)))
 	return mean, std

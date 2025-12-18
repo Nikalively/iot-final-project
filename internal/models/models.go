@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Metric struct {
 	Timestamp time.Time `json:"timestamp"`

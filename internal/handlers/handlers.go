@@ -2,6 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
+	"time"
+
 	"github.com/Nikalively/iot-final-project/internal/analytics"
 	"github.com/Nikalively/iot-final-project/internal/config"
 	"github.com/Nikalively/iot-final-project/internal/models"
@@ -9,9 +13,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
-	"sync"
-	"time"
 )
 
 var (
@@ -36,7 +37,6 @@ func init() {
 type Handler struct {
 	analyzer *analytics.Analyzer
 	redis    *redis.Client
-	mu       sync.Mutex
 }
 
 func NewHandler(cfg *config.Config) *Handler {
@@ -57,14 +57,19 @@ func (h *Handler) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rpsCounter.Inc()
-	
+
 	key := "metric:" + metric.Timestamp.Format(time.RFC3339)
 	data, _ := json.Marshal(metric)
-	h.redis.Set(r.Context(), key, data, 5*time.Minute)
+	ctx := r.Context()
+	if err := h.redis.Set(ctx, key, data, 5*time.Minute).Err(); err != nil {
+		http.Error(w, "Redis error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	ch := make(chan models.AnalyticsResult, 1)
-	go h.analyzer.ProcessMetric(metric, ch)
+	h.analyzer.ProcessMetric(metric, ch)
 	result := <-ch
+	close(ch)
 	if result.AnomalyCount > 0 {
 		anomalyCounter.Add(float64(result.AnomalyCount))
 	}
@@ -74,8 +79,6 @@ func (h *Handler) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
 	smoothed := h.analyzer.GetSmoothedLoad()
 	anomalies := h.analyzer.GetAnomalyCount()
 	json.NewEncoder(w).Encode(models.AnalyticsResult{
