@@ -1,22 +1,93 @@
 {
   "dashboard": {
+    "id": null,
+    "uid": "iot-dashboard-uid",
     "title": "IoT Final Project Dashboard",
+    "tags": ["iot", "monitoring"],
+    "timezone": "browser",
     "panels": [
       {
+        "id": 1,
         "title": "RPS",
         "type": "graph",
-        "targets": [{"expr": "rate(iot_rps_total[5m])"}]
+        "targets": [
+          {
+            "expr": "rate(iot_rps_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
       },
       {
+        "id": 2,
         "title": "Anomalies",
         "type": "graph",
-        "targets": [{"expr": "rate(iot_anomalies_total[5m])"}]
+        "targets": [
+          {
+            "expr": "rate(iot_anomalies_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
       },
       {
+        "id": 3,
         "title": "Latency",
         "type": "graph",
-        "targets": [{"expr": "histogram_quantile(0.95, rate(iot_request_duration_seconds_bucket[5m]))"}]
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(iot_request_duration_seconds_bucket[5m]))",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
       }
-    ]
-  }
+    ],
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "5s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  },
+  "overwrite": true
 }
