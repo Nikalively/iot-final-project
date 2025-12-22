@@ -1,17 +1,30 @@
-from locust import HttpUser, task, between
-import json
+from locust import HttpUser, between, task
 import time
 import random
 
-class IoTUser(HttpUser):
-    wait_time = between(0.001, 0.01)
+class MetricsUser(HttpUser):
+    wait_time = between(0.005, 0.02)
 
     @task
     def post_metrics(self):
-        current_time = time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime())
+        timestamp = int(time.time())
+
+        cpu = round(random.uniform(0, 100), 2)
+        rps = round(random.uniform(0, 100), 2)
+
+        anomaly = random.random() < 0.1
+        if anomaly:
+            rps = round(random.uniform(50, 100), 2)
+
         payload = {
-            "timestamp": current_time,
-            "cpu": random.uniform(20.0, 80.0),
-            "rps": random.uniform(5.0, 15.0) if random.random() > 0.1 else random.uniform(50.0, 100.0)
+            'timestamp': timestamp,
+            'cpu_usage': cpu,
+            'rps': rps
         }
-        self.client.post("/metrics", json=payload)
+
+        with self.client.post("/metrics", json=payload, catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"HTTP {response.status_code}: {response.text}")
+
